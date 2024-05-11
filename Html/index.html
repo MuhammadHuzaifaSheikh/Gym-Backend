@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Stars</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden; /* Prevent scrollbars */
+        background-color: #000; /* Dark background */
+    }
+    .container {
+        text-align: center;
+        color: #fff; /* Text color */
+        position: relative; /* Needed for z-index */
+    }
+    h1 {
+        margin-bottom: 20px;
+    }
+    /* Animation for stars */
+    @keyframes twinkle {
+        0% { opacity: 0;
+        left: 0%; }
+        50% { opacity: 1;
+        top:60% }
+        100% { opacity: 0;
+        right: 0%; }
+    }
+    .stars {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1; /* Ensure the stars are behind other content */
+    }
+    .star {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        background-color: #fff; /* Color of the stars */
+        border-radius: 50%;
+        animation: twinkle 5s infinite; /* Adjust speed as needed */
+    }
+    /* Define positions and sizes of stars */
+    .star:nth-child(1) {
+        top: 10%;
+        left: 20%;
+    }
+    .star:nth-child(2) {
+        top: 40%;
+        left: 70%;
+    }
+    .star:nth-child(3) {
+        top: 80%;
+        left: 40%;
+    }
+    .star:nth-child(4) {
+        top: 80%;
+        left: 10%;
+    }
+    .star:nth-child(5) {
+        top: 30%;
+        left: 10%;
+    }
+    .star:nth-child(6) {
+        top: 25%;
+        left: 75%;
+    }
+    .star:nth-child(7) {
+        top: 45%;
+        left: 75%;
+    }
+    .star:nth-child(8) {
+        top: 39%;
+        left: 40%;
+    }
+    .star:nth-child(9) {
+        top: 10%;
+        left: 90%;
+    }
+    /* Add more .star rules for additional stars */
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Api are running </h1>
+</div>
+
+<!-- Container for the stars background -->
+<div class="stars">
+    <!-- Stars -->
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <div class="star"></div>
+    <!-- Add more div.star for additional stars -->
+</div>
+
+</body>
+</html>
