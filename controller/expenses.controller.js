@@ -242,52 +242,64 @@ let AddTransaction = async (package, userId, BusinessLocation = null, next) => {
 const GymwithLeastandMostUsers = async (req, res, next) => {
     try {
         // Find all users and populate the gyms they are associated with
-        const users = await User.find().populate('BusinessLocation.Gym');
-
+        const users = await User.find({
+            $and: [
+                { isAdmin: { $ne: true } },
+                { isJimAdmin: { $ne: true } }
+            ]
+        }).populate('BusinessLocation.Gym');
         // Create a map to track gym counts
         const gymCountMap = {};
 
-        // Iterate through users to count gyms
+        // Iterate through users to count gyms and active/inactive users
         users.forEach(user => {
-            if (user.BusinessLocation && user.BusinessLocation.length)
+            if (user.BusinessLocation && user.BusinessLocation.length) {
                 user.BusinessLocation.forEach(gym => {
                     if (gym.Gym) {
-                        const gymId = gym.Gym.toString();
+                        const gymId = gym.Gym._id.toString(); // Use _id for comparison
                         if (!gymCountMap[gymId]) {
                             gymCountMap[gymId] = {
                                 gym: gym,
-                                count: 0
+                                count: 0,
+                                activeMemberCount: 0,
+                                inactivMemberCount: 0
                             };
                         }
                         gymCountMap[gymId].count++;
+                        // Count active and inactive users
+                        if (user.status === 'active') {
+                            gymCountMap[gymId].activeMemberCount++;
+                        } else if (user.status === 'inactive') {
+                            gymCountMap[gymId].inactivMemberCount++;
+                        }
                     }
                 });
+            }
         });
 
         // Convert gymCountMap values to an array
         const gymsWithCounts = Object.values(gymCountMap);
 
-        // Sort gyms by count (most users to least users)
-        gymsWithCounts.sort((a, b) => b.count - a.count);
+        // Sort gyms by active member count (most active members to least active members)
+        gymsWithCounts.sort((a, b) => b.activeMemberCount - a.activeMemberCount);
 
-        // Get top 4 gyms with the most users
-        const top4GymsWithMostUsers = gymsWithCounts.slice(0, 4);
+        // Get top 4 gyms with the most active members
+        const top4GymsWithMostActiveMembers = gymsWithCounts.slice(0, 4);
 
-        // Sort gyms by count (least users to most users)
-        gymsWithCounts.sort((a, b) => a.count - b.count);
+        // Sort gyms by inactive member count (most inactive members to least inactive members)
+        gymsWithCounts.sort((a, b) => b.inactivMemberCount - a.inactivMemberCount);
 
-        // Get least 4 gyms with the least users
-        const least4GymsWithLeastUsers = gymsWithCounts.slice(0, 4);
+        // Get top 4 gyms with the most inactive members
+        const top4GymsWithMostInactiveMembers = gymsWithCounts.slice(0, 4);
 
         res.status(200).json({
-            most: top4GymsWithMostUsers,
-            least: least4GymsWithLeastUsers
+            mostActiveMembers: top4GymsWithMostActiveMembers,
+            mostInactiveMembers: top4GymsWithMostInactiveMembers
         });
     } catch (err) {
         return next(err);
     }
 };
-
 
 
 
