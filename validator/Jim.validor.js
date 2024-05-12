@@ -23,7 +23,7 @@ const AddJIM = Joi.object().keys({
     password: Joi.string().required().label('password'),
     phone: Joi.string().optional().allow(null,""),
     image: Joi.string().optional().allow(null,""),
-    status: Joi.string().optional().valid('active', 'archived'),
+    status: Joi.string().optional().valid('active', 'archived',"pending","inactive"),
     active_date: Joi.date().optional(),
     inActive_date: Joi.date().optional(),
     // isAdmin: Joi.string().optional().allow(null,""),
