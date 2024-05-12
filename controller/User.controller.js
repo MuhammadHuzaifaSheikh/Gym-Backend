@@ -362,6 +362,7 @@ module.exports = {
    },
    /////////////////////////////////////////
    async deleteUser(req, res, next) {
+
       try {
          let user = await User.findOne({ _id: req.body.id })
          if (!user) {
