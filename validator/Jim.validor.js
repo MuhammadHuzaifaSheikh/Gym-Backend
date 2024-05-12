@@ -13,7 +13,7 @@ const AddJIM = Joi.object().keys({
     package: Joi.string().optional().allow(null,""),
     city: Joi.string().optional().allow(null,""),
     description: Joi.string().optional().allow(null,""),
-    status: Joi.string().optional().valid('active', 'archived'),
+    status: Joi.string().optional().valid('active', 'archived',"pending","inactive"),
   });
   const UpdateJim = Joi.object().keys({
     id:Joi.string().required().label("id"),
