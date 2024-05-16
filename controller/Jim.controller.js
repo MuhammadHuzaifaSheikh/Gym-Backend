@@ -181,12 +181,7 @@ module.exports = {
                 packageMap[pkg._id.toString()] = pkg.packageIds;
             });
 
-            // Merge packageIds with businessLocations
-            // const updatedBusinessLocations = businessLocations.results.map(location => ({
-            //     ...location,
-            //     packages: packageMap[location._id.toString()] || [] // Assign packageIds or an empty array if not found
-            // }));
-
+       
 
             const updateaBusinessLocations = businessLocations.results.map((location)=>(
                 {

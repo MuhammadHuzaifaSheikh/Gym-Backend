@@ -68,7 +68,7 @@ const getAttendance = async (req, res, next) => {
             user: userId, // Filter by user ID
             BusinessLocation: jimId, // Filter by Business Location ID
             status: "punchOut", // Filter by status
-            createdAt: { $gte: todayDate } // Filter by createdAt, starting from today
+            // createdAt: { $gte: todayDate } // Filter by createdAt, starting from today
         }
     );
 
