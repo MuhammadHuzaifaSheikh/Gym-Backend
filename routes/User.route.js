@@ -4,6 +4,7 @@ const { verifyToken } = require("../utils/varifyToken.js");
 const Router = require("express").Router();
 
 Router.post("/addUser",upload.array("images") ,controller.addUser);
+Router.post("/register",upload.array("images") ,controller.registerUser);
 Router.post("/loginUser", controller.login);
 Router.get("/getAllBusinessUser",verifyToken, controller.getAllByBusinessLocation);
 Router.get("/getOne/:id", controller.getOne);

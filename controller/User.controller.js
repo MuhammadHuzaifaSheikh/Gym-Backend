@@ -5,7 +5,7 @@ const { createError } = require("../utils/error");
 const jwt = require("jsonwebtoken");
 const CrudServices = require("../utils/crudServices");
 const { pick, App_host } = require("../utils/pick");
-const { Adduser, UpdateUser } = require("../validator/user.validation");
+const { Adduser, UpdateUser,RegisterUserSchema } = require("../validator/user.validation");
 const { AddTransaction } = require("./expenses.controller");
 const { JimActiveUser } = require("./Attendence.controller");
 const Jim = require("../models/Jim.model");
@@ -17,6 +17,7 @@ module.exports = {
 
    //////////////// request to create user /////////////////
    async addUser(req, res, next) {
+
       try {
          // createError
          const { error } = Adduser.validate(req.body);
@@ -28,6 +29,10 @@ module.exports = {
             email: email,
             // 'BusinessLocation.Gym':  req.body.BusinessLocation 
          })
+
+
+
+         console.log("checkuser",checkuser)
 
          // if (checkuser) {
          //    return next(createError(404, "A user Already Registered"))
@@ -65,31 +70,85 @@ module.exports = {
             req.body["status"] = "inactive"
          }
          
-         const salt = bcrypt.genSaltSync(10)
-         const hash = await bcrypt.hashSync(req.body.password, salt)
-         let user = new User({
-            ...req.body,
-            password: hash
-         })
-         await user.save()
+         // const salt = bcrypt.genSaltSync(10)
+         // const hash = await bcrypt.hashSync(req.body.password, salt)
+         // let user = new User({
+         //    ...req.body,
+         //    password: hash
+         // })
+         // await user.save()
          if (!req.body.status) {
             await addNotification("user", user_id.toString(),`new user Request from ${req.body.full_name}`)
          }
 
-         await AddTransaction(req.body.package, user._id.toString(), enrollGym, next)
+         // await AddTransaction(req.body.package, user._id.toString(), enrollGym, next)
 
-         let { password, ...info } = user;
+         
          return res.status(200).send({
             success: true,
             message: "registered",
             status: 200,
-            data: info._doc
+            data: {}
          })
       }
       catch (error) {
+         console.log(error)
          next(error)
       }
    },
+
+
+   async  registerUser(req, res, next) {
+
+
+  console.log("registerUser", req.body);
+
+
+    try {
+        const { error } = RegisterUserSchema.validate(req.body);
+        if (error) {
+            return next(createError(404, error.message));
+        }
+        
+        const email = req.body.email;
+        const checkuser = await User.findOne({ email: email });
+        
+        if (checkuser) {
+            return next(createError(404, "A user is already registered with this email"));
+        }
+
+        if (req.files && req.files.length) {
+            const element = req.files[0];
+            req.body['images'] = `${App_host}profile/images/${element.filename}`;
+        }
+
+        if (!req.body.status) {
+            req.body["status"] = "active";
+        }
+
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(req.body.password, salt);
+        const user = new User({
+            ...req.body,
+            password: hash
+        });
+
+        await user.save();
+        if (!req.body.status) {
+            await addNotification("user", user._id.toString(), `New user request from ${req.body.full_name}`);
+        }
+
+        let { password, ...info } = user;
+        return res.status(200).send({
+            success: true,
+            message: "User registered successfully",
+            status: 200,
+            data: info._doc
+        });
+    } catch (error) {
+        next(error);
+    }
+},
    ////////////////////////////////////////////////////////////////////////////////////////////
 
    //////////////// login request for user /////////////////
@@ -99,6 +158,7 @@ module.exports = {
          if (!checkuser) {
             return next(createError(404, "invalid email"))
          }
+         
          const checkpassword = await bcrypt.compareSync(req.body.password, checkuser.password);
          if (!checkpassword) {
             return next(createError(404, "wrong password"))
@@ -201,8 +261,11 @@ module.exports = {
 
    ///////////// get single  user /////////////////
    async getOne(req, res, next) {
+      console.log("req.params.id",req.params.id)
       try {
          const findUser = await User.findOne({ _id: req.params.id })
+
+         console.log("findUser",findUser)
          return res.status(200).json({
             success: true,
             message: "User Data",

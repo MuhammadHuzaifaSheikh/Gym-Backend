@@ -1,5 +1,22 @@
 const Joi = require('joi');
-
+const RegisterUserSchema = Joi.object().keys({
+  full_name: Joi.string().required().label("name"),
+  email: Joi.string().email().required().label("email"),
+  password: Joi.string().optional().label('password'),
+  phone: Joi.string().optional().allow(null, ""),
+  city: Joi.string().optional().allow(null, ""),
+  adress: Joi.string().optional().allow(null, ""),
+  images: Joi.string().optional().allow(null, ""),
+  description: Joi.string().optional().allow(null, ""),
+  status: Joi.string().optional().valid("active", "inactive", "blocked","pending"),  
+  role: Joi.string().optional(),
+  payment_status: Joi.string().optional().valid('paid', 'unpaid'),
+  active_date: Joi.date().optional(),
+  inActive_date: Joi.date().optional(),
+  createdAt: Joi.string().optional().allow(null),
+  updatedAt: Joi.string().optional().allow(null),
+  __v: Joi.string().optional().allow(null)
+});
 
 const Adduser = Joi.object().keys({
     full_name:Joi.string().required().label("name"),
@@ -12,7 +29,7 @@ const Adduser = Joi.object().keys({
     adress: Joi.string().optional().allow(null,""),
     images: Joi.string().optional().allow(null,""),
     description: Joi.string().optional().allow(null,""),
-    status: Joi.string().optional().valid('active', 'inactive'),
+    status: Joi.string().optional().valid("active", "inactive", "blocked","pending"),
     role: Joi.string().optional(),
     payment_status: Joi.string().optional().valid('paid', 'unpaid'),
     active_date: Joi.date().optional(),
@@ -23,6 +40,8 @@ const Adduser = Joi.object().keys({
     updatedAt: Joi.string().optional().allow(null),
     __v:Joi.string().optional().allow(null)
   });
+
+
   const UpdateUser = Joi.object().keys({
     id:Joi.string().required().label("id"),
     name:Joi.string().label("name"),
@@ -33,7 +52,7 @@ const Adduser = Joi.object().keys({
     password: Joi.string().label('password'),
     phone: Joi.string().optional().allow(null,""),
     image: Joi.string().optional().allow(null,""),
-    status: Joi.string().optional().valid('active', 'inactive'),
+    status: Joi.string().optional().valid("active", "inactive", "blocked","pending"),
     payment_status: Joi.string().optional().valid('paid', 'unpaid'),
     active_date: Joi.date().optional(),
     inActive_date: Joi.date().optional(),
@@ -43,7 +62,8 @@ const Adduser = Joi.object().keys({
 
 module.exports = { 
     Adduser,
-    UpdateUser
+    UpdateUser,
+    RegisterUserSchema
 };
 
 

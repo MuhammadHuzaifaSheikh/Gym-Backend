@@ -70,7 +70,7 @@ const getAttendance = async (req, res, next) => {
             status: "punchOut", // Filter by status
             // createdAt: { $gte: todayDate } // Filter by createdAt, starting from today
         }
-    );
+    ).sort({ createdAt: -1 });
 
         if (attendance.length === 0) {
             return res.status(404).send({
