@@ -5,7 +5,7 @@ const { createError } = require("../utils/error");
 const jwt = require("jsonwebtoken");
 const CrudServices = require("../utils/crudServices");
 const { pick, App_host } = require("../utils/pick");
-const { Adduser, UpdateUser,RegisterUserSchema } = require("../validator/user.validation");
+const { Adduser, UpdateUser, RegisterUserSchema } = require("../validator/user.validation");
 const { AddTransaction } = require("./expenses.controller");
 const { JimActiveUser } = require("./Attendence.controller");
 const Jim = require("../models/Jim.model");
@@ -32,7 +32,6 @@ module.exports = {
 
 
 
-         console.log("checkuser",checkuser)
 
          // if (checkuser) {
          //    return next(createError(404, "A user Already Registered"))
@@ -40,11 +39,12 @@ module.exports = {
 
          let enrollGym = req.body.BusinessLocation
 
-         if (checkuser && checkuser.BusinessLocation && checkuser.BusinessLocation.length) {
+         if (checkuser && checkuser.BusinessLocation && checkuser.BusinessLocation.length > 0) {
 
             checkuser.BusinessLocation.push({
                Gym: enrollGym,
-               package: req.body.package
+               package: req.body.package,
+               status: "pending"
             })
 
             await checkuser.save()
@@ -58,9 +58,20 @@ module.exports = {
          } else {
             req.body["BusinessLocation"] = [{
                Gym: enrollGym,
-               package: req.body.package
+               package: req.body.package,
+               status: "pending",
+               payment_status: "unpaid"
             }]
+
+            // checkuser.BusinessLocation.push({
+            //    Gym: enrollGym,
+            //    package: req.body.package
+            // })
+
+
          }
+
+
 
          if (req.files && req.files.length) {
             let element = req.files[0]
@@ -69,26 +80,33 @@ module.exports = {
          if (!req.body.status) {
             req.body["status"] = "inactive"
          }
-         
+
          // const salt = bcrypt.genSaltSync(10)
-         // const hash = await bcrypt.hashSync(req.body.password, salt)
-         // let user = new User({
-         //    ...req.body,
-         //    password: hash
-         // })
-         // await user.save()
+         // const hash = await bcrypt.hashSync(req.body.password, salt)    
+
+
+         // is there could be another way
+         const updatedUser = await User.findByIdAndUpdate(checkuser?._id, req.body, { new: true });
+
          if (!req.body.status) {
-            await addNotification("user", user_id.toString(),`new user Request from ${req.body.full_name}`)
+            await addNotification("user", checkuser?._id.toString(), `new user Request from ${req.body.full_name}`)
          }
+
+
+         //  const saveData =   await checkuser.save()
+
+
+         console.log("user", updatedUser)
+
 
          // await AddTransaction(req.body.package, user._id.toString(), enrollGym, next)
 
-         
+
          return res.status(200).send({
             success: true,
             message: "registered",
             status: 200,
-            data: {}
+            data: updatedUser
          })
       }
       catch (error) {
@@ -98,57 +116,57 @@ module.exports = {
    },
 
 
-   async  registerUser(req, res, next) {
+   async registerUser(req, res, next) {
 
 
-  console.log("registerUser", req.body);
+      console.log("registerUser", req.body);
 
 
-    try {
-        const { error } = RegisterUserSchema.validate(req.body);
-        if (error) {
+      try {
+         const { error } = RegisterUserSchema.validate(req.body);
+         if (error) {
             return next(createError(404, error.message));
-        }
-        
-        const email = req.body.email;
-        const checkuser = await User.findOne({ email: email });
-        
-        if (checkuser) {
-            return next(createError(404, "A user is already registered with this email"));
-        }
+         }
 
-        if (req.files && req.files.length) {
+         const email = req.body.email;
+         const checkuser = await User.findOne({ email: email });
+
+         if (checkuser) {
+            return next(createError(404, "A user is already registered with this email"));
+         }
+
+         if (req.files && req.files.length) {
             const element = req.files[0];
             req.body['images'] = `${App_host}profile/images/${element.filename}`;
-        }
+         }
 
-        if (!req.body.status) {
+         if (!req.body.status) {
             req.body["status"] = "active";
-        }
+         }
 
-        const salt = bcrypt.genSaltSync(10);
-        const hash = bcrypt.hashSync(req.body.password, salt);
-        const user = new User({
+         const salt = bcrypt.genSaltSync(10);
+         const hash = bcrypt.hashSync(req.body.password, salt);
+         const user = new User({
             ...req.body,
             password: hash
-        });
+         });
 
-        await user.save();
-        if (!req.body.status) {
+         await user.save();
+         if (!req.body.status) {
             await addNotification("user", user._id.toString(), `New user request from ${req.body.full_name}`);
-        }
+         }
 
-        let { password, ...info } = user;
-        return res.status(200).send({
+         let { password, ...info } = user;
+         return res.status(200).send({
             success: true,
             message: "User registered successfully",
             status: 200,
             data: info._doc
-        });
-    } catch (error) {
-        next(error);
-    }
-},
+         });
+      } catch (error) {
+         next(error);
+      }
+   },
    ////////////////////////////////////////////////////////////////////////////////////////////
 
    //////////////// login request for user /////////////////
@@ -158,7 +176,7 @@ module.exports = {
          if (!checkuser) {
             return next(createError(404, "invalid email"))
          }
-         
+
          const checkpassword = await bcrypt.compareSync(req.body.password, checkuser.password);
          if (!checkpassword) {
             return next(createError(404, "wrong password"))
@@ -200,34 +218,33 @@ module.exports = {
          if (filterdata.BusinessLocation) {
             filter["BusinessLocation.Gym"] = filterdata.BusinessLocation
          }
-         if (filterdata.status==='active') {
+         if (filterdata.status === 'active') {
             // filter["status"] = filterdata.status
-            filter["$or"] = [
-               { "status": 'active' },
-               { "status": 'inactive' }
-           ];
+            filter["BusinessLocation.status"] = { $in: ['active', 'inactive'] };
+
+
          }
-         if (filterdata.status==='pending') {
-            filter["status"] = 'pending'
-         //    filter["$or"] = [
-         //       { "status": 'active' },
-         //       { "status": 'inactive' }
-         //   ];
+         if (filterdata.status === 'pending') {
+            filter["BusinessLocation.status"] = 'pending';
+            //    filter["$or"] = [
+            //       { "status": 'active' },
+            //       { "status": 'inactive' }
+            //   ];
          }
          if (filterdata.search) {
             filter["$or"] = [
-                {
-                    email: {
-                        $regex: new RegExp('.*' + filterdata.search + '.*', 'i')
-                    }
-                },
-                {
-                    full_name: {
-                        $regex: new RegExp('.*' + filterdata.search + '.*', 'i')
-                    }
-                }
+               {
+                  email: {
+                     $regex: new RegExp('.*' + filterdata.search + '.*', 'i')
+                  }
+               },
+               {
+                  full_name: {
+                     $regex: new RegExp('.*' + filterdata.search + '.*', 'i')
+                  }
+               }
             ];
-        }
+         }
 
          const options = pick(req.query, ["limit", "page"]);
          const findUser = await CrudServices.getList(User, filter, options)
@@ -261,11 +278,11 @@ module.exports = {
 
    ///////////// get single  user /////////////////
    async getOne(req, res, next) {
-      console.log("req.params.id",req.params.id)
+      console.log("req.params.id", req.params.id)
       try {
          const findUser = await User.findOne({ _id: req.params.id })
 
-         console.log("findUser",findUser)
+         console.log("findUser", findUser)
          return res.status(200).json({
             success: true,
             message: "User Data",
@@ -342,7 +359,7 @@ module.exports = {
    },
    ///////////////////////////
    async updateUserStatus(req, res, next) {
-      
+
       try {
          const { error } = UpdateUser.validate(req.body);
          if (error) {
@@ -355,62 +372,125 @@ module.exports = {
          }
          let status = req.body?.status
          let payment_status = req.body?.payment_status
+         let gymId = req.body?.gymId;
+
          let user = await User.findOne({ _id: req.body.id })
-       
+
          if (!user) {
             return next(createError(404, "no data found"))
          } else {
             if (user.isJimAdmin) {
+               // const businessLocation = user.BusinessLocation.find((location) => location.Gym.toString() === gymId);
 
-               if(payment_status){
-                  user.payment_status = payment_status
+               user.BusinessLocation.forEach((location) => {
+                  if (location.Gym.toString() === gymId) {
+                     if (payment_status) {
+                        location.payment_status = payment_status
+                     }
+                  }
+               })
+               if (payment_status) {
+                  // user["BusinessLocation.payment_status"] = payment_status
                   let gym = await Jim.findOne({ _id: user.BusinessLocation[0].Gym })
                   if (gym) {
                      gym.payment_status = payment_status
                      await gym.save()
                   }
                }
-               else{
-                  
-                  user.status = status
-                  if(status==='active') {
-                   
-                     user.active_date = new Date().toISOString()
-                  }
-                  else if(status==='inactive'){
-                     user.inActive_date = new Date().toISOString()
-                  }
+               else {
+
+                  user.BusinessLocation.forEach((location) => {
+                     if (location.Gym.toString() === gymId) {
+                        location.status = status
+
+                        if (status === 'active') {
+                           location.active_date = new Date().toISOString()
+                        }
+                        else if (status === 'inactive') {
+                           location.inActive_date = new Date().toISOString()
+
+                        }
+                     }
+                  })
+
+
+
+
+
+                  // user["BusinessLocation.status"] = status
+
+                  // if (status === 'active') {
+
+                  //    user["BusinessLocation.active_date"] = new Date().toISOString()
+
+                  // }
+                  // else if (status === 'inactive') {
+                  //    user["BusinessLocation.inActive_date"] = new Date().toISOString()
+
+                  // }
                   let gym = await Jim.findOne({ _id: user.BusinessLocation[0].Gym })
                   if (gym) {
                      gym.status = status
-                     if(status==='active') {
+                     if (status === 'active') {
                         gym.active_date = new Date().toISOString()
                      }
-                     else if(status==='inactive'){
+                     else if (status === 'inactive') {
                         gym.inActive_date = new Date().toISOString()
                      }
                      await gym.save()
                   }
                }
-             
+
 
             } else {
-               if(payment_status){
-                  user.payment_status = payment_status
-               }
-               else{
-                  user.status = status
-                  if(status==='active') {
-                   
-                     user.active_date = new Date().toISOString()
+               user.BusinessLocation.forEach((location) => {
+                  if (location.Gym.toString() === gymId) {
+                     if (payment_status) {
+                        location.payment_status = payment_status
+
+                     }
+                     else {
+                        location.status = status
+
+                        if (status === 'active') {
+
+                           location.active_date = new Date().toISOString()
+
+                        }
+                        else if (status === 'inactive') {
+                           location.inActive_date = new Date().toISOString()
+
+                        }
+                     }
                   }
-                  else if(status==='inactive'){
-                     user.inActive_date = new Date().toISOString()
-                  }
-               }
+               })
+
+
+
+
+               // if (payment_status) {
+               //    user["BusinessLocation.payment_status"] = payment_status
+
+               // }
+               // else {
+               //    user["BusinessLocation.status"] = status
+
+               //    if (status === 'active') {
+
+               //       user["BusinessLocation.active_date"] = new Date().toISOString()
+
+               //    }
+               //    else if (status === 'inactive') {
+               //       user["BusinessLocation.inActive_date"] = new Date().toISOString()
+
+               //    }
+               // }
 
             }
-           await user.save()
+
+
+            console.log("user", user)
+            await user.save()
          }
          return res.status(200).json({
             success: true,

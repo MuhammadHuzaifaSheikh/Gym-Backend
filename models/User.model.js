@@ -17,11 +17,33 @@ const userSchema = new mongoose.Schema({
             ref: 'Packages',
             required: false
         },
+        status:{
+            type: String,
+            required: false,
+            enum: ["active", "inactive", "blocked","pending"],
+            default: "pending"
+        },
+        payment_status:{
+            type: String,
+            required: false,
+            enum: ["paid", "unpaid"],
+            default: "unpaid"
+        },
+        active_date:{
+            type: Date,
+            required: false,
+        },
+        inActive_date:{
+            type: Date,
+            required: false,
+        },
         updated_on: {
             type: Date,
             required: false
         },
     }],
+
+   
     email: {
         type: String,
         required: true,

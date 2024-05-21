@@ -56,6 +56,8 @@ const Adduser = Joi.object().keys({
     payment_status: Joi.string().optional().valid('paid', 'unpaid'),
     active_date: Joi.date().optional(),
     inActive_date: Joi.date().optional(),
+    gymId:Joi.string().optional().label("gymId"),
+
     // isAdmin: Joi.string().optional().allow(null,""),
     // isJimAdmin: Joi.string().optional().allow(null),
   });
