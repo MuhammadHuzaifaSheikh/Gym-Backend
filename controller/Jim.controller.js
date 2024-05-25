@@ -217,18 +217,20 @@ module.exports = {
     ///////////// get single  BusinessLocation /////////////////
     async getOneBusinessLocation(req, res, next) {
         try {
-            const JimDetail = await Jim.findOne({ _id: req.query.id })
-            return res.status(200).json({
-                success: true,
-                message: "User Data",
-                status: 200,
-                data: JimDetail
-            })
+          const { id } = req.query;
+          const fields = req.query.fields ? req.query.fields.split(',').join(' ') : '';
+      
+          const JimDetail = await Jim.findOne({ _id: id }).select(fields);
+          return res.status(200).json({
+            success: true,
+            message: "Gym Data",
+            status: 200,
+            data: JimDetail
+          });
+        } catch (error) {
+          next(error);
         }
-        catch (error) {
-            next(error)
-        }
-    },
+      },
     ///////////// Update Business Location /////////////////
     async updateaBusinessLocation(req, res, next) {
         try {
