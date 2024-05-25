@@ -91,6 +91,10 @@ module.exports = {
 
             await AddTransaction(req.body.package, user._id.toString(), businessLocation._id.toString(), next)
 
+
+            console.log("req.body",req.body)
+            console.log("businessLocation",businessLocation)
+
             return res.status(200).send({
                 success: true,
                 message: "registered",
